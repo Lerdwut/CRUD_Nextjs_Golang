@@ -4,23 +4,32 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-
-	_ "github.com/denisenkom/go-mssqldb"
+	
+	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
 
 func Connect() {
+	host := "localhost"
+	port := 5432
+	user := "postgres"
+	password := "Guide2002"
+	dbname := "CRUD_Golang"
+
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+
 	var err error
-	connString := "server=Guide\\SQLEXPRESS;database=CRUD_Golang;trusted_connection=yes"
-	DB, err = sql.Open("sqlserver", connString)
+	DB, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
-		log.Fatal("Connection failed: ", err)
+		log.Fatal("Error opening database connection: ", err.Error())
 	}
 
 	err = DB.Ping()
 	if err != nil {
-		log.Fatal("Cannot ping to DB: ", err)
+		log.Fatal("Error connecting to database: ", err.Error())
 	}
-	fmt.Println("MSSQL Connected!")
+
+	log.Println("Successfully connected to PostgreSQL database!")
 }

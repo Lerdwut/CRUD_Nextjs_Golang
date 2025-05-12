@@ -2,55 +2,54 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"CRUD_NEXTJS_GOLANG/database"
 	"CRUD_NEXTJS_GOLANG/models"
-	"strconv"
+	
 )
 
 func GetUsers(c *fiber.Ctx) error {
-	users, err := models.GetUsers()
+	var users []model.User
+	err := database.DB.Select(&users, "SELECT * FROM users ORDER BY id ASC")
 	if err != nil {
-		return c.Status(500).SendString("Error fetching users")
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(users)
 }
 
 func CreateUser(c *fiber.Ctx) error {
-	var user models.User
+	var user model.User
 	if err := c.BodyParser(&user); err != nil {
-		return c.Status(400).SendString("Invalid input")
+		return c.Status(400).JSON(fiber.Map{"error": "invalid input"})
 	}
-	if err := models.CreateUser(user); err != nil {
-		return c.Status(500).SendString("Error creating user")
+	err := database.DB.QueryRow(
+		`INSERT INTO users (name, email, age) VALUES ($1, $2, $3) RETURNING id`,
+		user.Name, user.Email, user.Age).Scan(&user.ID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.Status(201).SendString("User created successfully")
+	return c.JSON(user)
 }
 
 func UpdateUser(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return c.Status(400).SendString("Invalid ID")
-	}
-
-	var user models.User
+	id := c.Params("id")
+	var user model.User
 	if err := c.BodyParser(&user); err != nil {
-		return c.Status(400).SendString("Invalid input")
+		return c.Status(400).JSON(fiber.Map{"error": "invalid input"})
 	}
-
-	user.ID = id
-	if err := models.UpdateUser(user); err != nil {
-		return c.Status(500).SendString("Error updating user")
+	_, err := database.DB.Exec(
+		`UPDATE users SET name=$1, email=$2, age=$3 WHERE id=$4`,
+		user.Name, user.Email, user.Age, id)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.SendString("User updated successfully")
+	return c.JSON(fiber.Map{"message": "updated"})
 }
 
 func DeleteUser(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.Params("id"))
+	id := c.Params("id")
+	_, err := database.DB.Exec("DELETE FROM users WHERE id = $1", id)
 	if err != nil {
-		return c.Status(400).SendString("Invalid ID")
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
-
-	if err := models.DeleteUser(id); err != nil {
-		return c.Status(500).SendString("Error deleting user")
-	}
-	return c.SendString("User deleted successfully")
+	return c.JSON(fiber.Map{"message": "deleted"})
 }

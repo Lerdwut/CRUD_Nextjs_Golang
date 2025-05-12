@@ -1,4 +1,6 @@
-const API_URL = "http://localhost:3001"
+import axios from "axios";
+
+const API_BASE = "http://localhost:3001";
 
 export interface User {
   id: number;
@@ -7,32 +9,22 @@ export interface User {
   age: number;
 }
 
-export async function getUsers(): Promise<User[]> {
-  const res = await fetch(`${API_URL}/users`);
-  return res.json();
-}
+export const getUsers = async () => {
+  const res = await axios.get<User[]>(`${API_BASE}/users`);
+  return res.data;
+};
 
-export async function getUser(id: number): Promise<User> {
-  const res = await fetch(`${API_URL}/users/${id}`);
-  return res.json();
-}
+export const createUser = async (user: Omit<User, "id">) => {
+  const res = await axios.post(`${API_BASE}/users`, user);
+  return res.data;
+};
 
-export async function createUser(user: Omit<User, "id">) {
-  return await fetch(`${API_URL}/users`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(user),
-  });
-}
+export const updateUser = async (id: number, user: Omit<User, "id">) => {
+  const res = await axios.put(`${API_BASE}/users/${id}`, user);
+  return res.data;
+};
 
-export async function updateUser(id: number, user: Omit<User, "id">) {
-  return await fetch(`${API_URL}/users/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(user),
-  });
-}
-
-export async function deleteUser(id: number) {
-  return await fetch(`${API_URL}/users/${id}`, { method: "DELETE" });
-}
+export const deleteUser = async (id: number) => {
+  const res = await axios.delete(`${API_BASE}/users/${id}`);
+  return res.data;
+};

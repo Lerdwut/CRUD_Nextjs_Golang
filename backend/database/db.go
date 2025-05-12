@@ -1,14 +1,14 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
-	
+
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
-var DB *sql.DB
+var DB *sqlx.DB
 
 func Connect() {
 	host := "localhost"
@@ -21,12 +21,7 @@ func Connect() {
 		host, port, user, password, dbname)
 
 	var err error
-	DB, err = sql.Open("postgres", psqlInfo)
-	if err != nil {
-		log.Fatal("Error opening database connection: ", err.Error())
-	}
-
-	err = DB.Ping()
+	DB, err = sqlx.Connect("postgres", psqlInfo)
 	if err != nil {
 		log.Fatal("Error connecting to database: ", err.Error())
 	}
